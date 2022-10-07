@@ -4,8 +4,10 @@ from IPython.display import Markdown, display
 import numpy as np
 from frozenlake import FrozenLakeEnv
 
+
 def printmd(string):
     display(Markdown(string))
+
 
 def policy_evaluation_soln(env, policy, gamma=1, theta=1e-8):
     V = np.zeros(env.nS)
@@ -16,11 +18,12 @@ def policy_evaluation_soln(env, policy, gamma=1, theta=1e-8):
             for a, action_prob in enumerate(policy[s]):
                 for prob, next_state, reward, done in env.P[s][a]:
                     Vs += action_prob * prob * (reward + gamma * V[next_state])
-            delta = max(delta, np.abs(V[s]-Vs))
+            delta = max(delta, np.abs(V[s] - Vs))
             V[s] = Vs
         if delta < theta:
             break
     return V
+
 
 def q_from_v_soln(env, V, s, gamma=1):
     q = np.zeros(env.nA)
@@ -29,13 +32,15 @@ def q_from_v_soln(env, V, s, gamma=1):
             q[a] += prob * (reward + gamma * V[next_state])
     return q
 
+
 def policy_improvement_soln(env, V, gamma=1):
     policy = np.zeros([env.nS, env.nA]) / env.nA
     for s in range(env.nS):
         q = q_from_v_soln(env, V, s, gamma)
-        best_a = np.argwhere(q==np.max(q)).flatten()
-        policy[s] = np.sum([np.eye(env.nA)[i] for i in best_a], axis=0)/len(best_a)
+        best_a = np.argwhere(q == np.max(q)).flatten()
+        policy[s] = np.sum([np.eye(env.nA)[i] for i in best_a], axis=0) / len(best_a)
     return policy
+
 
 def policy_iteration_soln(env, gamma=1, theta=1e-8):
     policy = np.ones([env.nS, env.nA]) / env.nA
@@ -43,15 +48,16 @@ def policy_iteration_soln(env, gamma=1, theta=1e-8):
         V = policy_evaluation_soln(env, policy, gamma, theta)
         new_policy = policy_improvement_soln(env, V)
         if (new_policy == policy).all():
-            break;
+            break
         policy = copy.copy(new_policy)
     return policy, V
+
 
 env = FrozenLakeEnv()
 random_policy = np.ones([env.nS, env.nA]) / env.nA
 
-class Tests(unittest.TestCase):
 
+class Tests(unittest.TestCase):
     def policy_evaluation_check(self, policy_evaluation):
         soln = policy_evaluation_soln(env, random_policy)
         to_check = policy_evaluation(env, random_policy)
@@ -85,7 +91,9 @@ class Tests(unittest.TestCase):
     def value_iteration_check(self, value_iteration):
         self.policy_iteration_check(value_iteration)
 
+
 check = Tests()
+
 
 def run_check(check_name, func):
     try:

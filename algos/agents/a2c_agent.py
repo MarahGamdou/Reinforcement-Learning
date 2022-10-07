@@ -4,8 +4,21 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 
-class A2CAgent():
-    def __init__(self, input_shape, action_size, seed, device, gamma, alpha, beta, update_every, actor_m, critic_m):
+
+class A2CAgent:
+    def __init__(
+        self,
+        input_shape,
+        action_size,
+        seed,
+        device,
+        gamma,
+        alpha,
+        beta,
+        update_every,
+        actor_m,
+        critic_m,
+    ):
         """Initialize an Agent object.
         Params
         ======
@@ -15,7 +28,7 @@ class A2CAgent():
             device(string): Use Gpu or CPU
             gamma (float): discount factor
             alpha (float): Actor learning rate
-            beta (float): Critic learning rate 
+            beta (float): Critic learning rate
             update_every (int): how often to update the network
             actor_m(Model): Pytorch Actor Model
             critic_m(Model): PyTorch Critic Model
@@ -39,9 +52,9 @@ class A2CAgent():
 
         # Memory
         self.log_probs = []
-        self.values    = []
-        self.rewards   = []
-        self.masks     = []
+        self.values = []
+        self.rewards = []
+        self.masks = []
         self.entropies = []
 
         self.t_step = 0
@@ -49,9 +62,9 @@ class A2CAgent():
     def step(self, state, log_prob, entropy, reward, done, next_state):
 
         state = torch.from_numpy(state).unsqueeze(0).to(self.device)
-        
+
         value = self.critic_net(state)
-        
+
         # Save experience in  memory
         self.log_probs.append(log_prob)
         self.values.append(value)
@@ -62,12 +75,12 @@ class A2CAgent():
         self.t_step = (self.t_step + 1) % self.update_every
 
         if self.t_step == 0:
-           self.learn(next_state)
-           self.reset_memory()
-                
+            self.learn(next_state)
+            self.reset_memory()
+
     def act(self, state):
         """Returns action, log_prob, entropy for given state as per current policy."""
-        
+
         state = torch.from_numpy(state).unsqueeze(0).to(self.device)
         action_probs = self.actor_net(state)
 
@@ -77,8 +90,6 @@ class A2CAgent():
 
         return action.item(), log_prob, entropy
 
-        
-        
     def learn(self, next_state):
         next_state = torch.from_numpy(next_state).unsqueeze(0).to(self.device)
         next_value = self.critic_net(next_state)
@@ -86,12 +97,12 @@ class A2CAgent():
         returns = self.compute_returns(next_value, self.gamma)
 
         log_probs = torch.cat(self.log_probs)
-        returns   = torch.cat(returns).detach()
-        values    = torch.cat(self.values)
+        returns = torch.cat(returns).detach()
+        values = torch.cat(self.values)
 
         advantage = returns - values
 
-        actor_loss  = -(log_probs * advantage.detach()).mean()
+        actor_loss = -(log_probs * advantage.detach()).mean()
         critic_loss = advantage.pow(2).mean()
 
         loss = actor_loss + 0.5 * critic_loss - 0.001 * sum(self.entropies)

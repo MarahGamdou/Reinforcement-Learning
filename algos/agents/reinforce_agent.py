@@ -4,7 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 
-class ReinforceAgent():
+
+class ReinforceAgent:
     def __init__(self, input_shape, action_size, seed, device, gamma, lr, policy):
         """Initialize an Agent object.
         Params
@@ -30,8 +31,8 @@ class ReinforceAgent():
 
         # Memory
         self.log_probs = []
-        self.rewards   = []
-        self.masks     = []
+        self.rewards = []
+        self.masks = []
 
     def step(self, log_prob, reward, done):
 
@@ -40,10 +41,9 @@ class ReinforceAgent():
         self.rewards.append(torch.from_numpy(np.array([reward])).to(self.device))
         self.masks.append(torch.from_numpy(np.array([1 - done])).to(self.device))
 
-                
     def act(self, state):
         """Returns action, log_prob for given state as per current policy."""
-        
+
         state = torch.from_numpy(state).unsqueeze(0).to(self.device)
         action_probs = self.policy_net(state)
 
@@ -51,15 +51,15 @@ class ReinforceAgent():
         log_prob = action_probs.log_prob(action)
 
         return action.item(), log_prob
-        
+
     def learn(self):
 
         returns = self.compute_returns(0, self.gamma)
 
         log_probs = torch.cat(self.log_probs)
-        returns   = torch.cat(returns).detach()
+        returns = torch.cat(returns).detach()
 
-        loss  = -(log_probs * returns).mean()
+        loss = -(log_probs * returns).mean()
 
         # Minimize the loss
         self.optimizer.zero_grad()
